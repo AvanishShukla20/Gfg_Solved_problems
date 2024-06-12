@@ -7,36 +7,89 @@ class Solution
 {
 	public:
 	//Function to find sum of weights of edges of the Minimum Spanning Tree.
+	int find(int x, vector<int>& parent)
+	{
+	    if(parent[x] == x) return x;
+	    
+	    return parent[x] = find(parent[x], parent);
+	}
+	
+	void Union(int u, int v, vector<int>& rank, vector<int>& parent)
+	{
+	    int par_u = find(u, parent);
+	    int par_v = find(v, parent);
+	    
+	    if(par_u == par_v) return;
+	    
+	    if(rank[par_u] < rank[par_v])
+	    {
+	        parent[par_u] = par_v ;
+	    }
+	    else if(rank[par_u] > rank[par_v])
+	    {
+	        parent[par_v] = par_u ;
+	    }
+	    else{
+	        parent[par_u] = par_v;
+	        rank[par_v] += 1;
+	    }
+	    
+	    return;
+	}
+	
+	
     int spanningTree(int V, vector<vector<int>> adj[])
     {
-        // code here
-        priority_queue<pair<int,int>, vector<pair<int, int>>, greater<pair<int,int>>> pq;
-        vector<int> vis(V, 0);
+        // using Disjoint Set Union
         
-        pq.push({0, 0});
-        int sum = 0;
+        vector<vector<int>> vec;
         
-        while(!pq.empty())
+        for(int u = 0; u < V; u++)
         {
-            auto temp = pq.top();
-            pq.pop();
-            
-            int wt = temp.first, node = temp.second;
-            
-            if(!vis[node])
+            for(auto &it : adj[u])
             {
-                sum += wt;
-                vis[node] = 1;
+                int v = it[0];
+                int wt = it[1];
                 
-                for(auto it : adj[node])
-                {
-                    if(!vis[it[0]]) pq.push({it[1], it[0]});
-                }
+                vec.push_back({u, v, wt});
             }
         }
         
-        return sum;
         
+        auto lambda_comparator = [&](vector<int>& a, vector<int>&b)
+        {
+            return a[2] < b[2];
+        };
+        
+        sort(vec.begin(), vec.end(), lambda_comparator);
+        
+       int sum = 0;
+       
+       vector<int> parent(V);
+       
+       for(int i=0; i<V; i++)
+       {
+           parent[i] = i;
+       }
+       
+       vector<int> rank(V, 0);
+       
+       for(int i=0; i<vec.size(); i++)
+       {
+           int a = vec[i][0];
+           int b = vec[i][1];
+           int wgt = vec[i][2];
+           
+           if(find(a, parent) != find(b, parent))
+           {
+               Union(a, b, rank, parent);
+               sum += wgt;
+           }
+       }
+       
+       
+       return sum;
+     
         
     }
 };
